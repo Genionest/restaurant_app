@@ -2,8 +2,8 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
-	"example.com/m/v2/global"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,35 +11,114 @@ type Dish struct {
 	ID       uint `gorm:"primaryKey`
 	Name     string
 	Price    int
-	category string
+	Category string
 }
 
+// AddDish 函数用于处理添加菜品的请求
+//
+// 参数:
+//
+//	ctx *gin.Context: Gin框架的上下文对象，用于获取请求参数和返回响应
+//
+// 返回值:
+//
+//	无
 func AddDish(ctx *gin.Context) {
 	var dish Dish
-	if err := ctx.ShouldBindJSON(&dish); err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	if err := global.DB.AutoMigrate(&dish); err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	if err := global.DB.Create(&dish).Error; err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+	if err := CreateData(ctx, &dish); err != nil {
 		return
 	}
 
 	ctx.IndentedJSON(http.StatusOK, dish)
 }
 
-func GetAllMenu(ctx *gin.Context) []string {
-	// global.DB.Find()
+// GetDish 是处理HTTP GET请求的处理器函数，用于根据给定的ID获取菜品信息
+// 参数：
+//
+//	ctx *gin.Context: Gin框架的上下文对象，包含了请求和响应信息
+//
+// 返回值：
+//
+//	无
+func GetDish(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var dish Dish
+	if err := GetData(ctx, &dish, DataQuery{"id": id}); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, dish)
+}
+
+// UpdateDish 更新菜品信息
+//
+// 参数:
+//
+//	ctx: gin.Context上下文对象
+//	dish: Dish结构体类型的菜品信息
+//
+// 返回值:
+//
+//	无
+func UpdateDish(ctx *gin.Context, dish Dish) {
+	if err := UpdateData(ctx, &dish); err != nil {
+		return
+	}
+	// var new_dish Dish
+	// GetData(ctx, &new_dish, DataQuery{"id": dish.ID})
+	// ctx.IndentedJSON(http.StatusOK, new_dish)
+	ctx.IndentedJSON(http.StatusOK, dish)
+}
+
+// DeleteDish 函数用于删除菜品
+// 参数:
+//
+//	ctx: *gin.Context - gin框架的上下文对象
+//
+// 返回值:
+//
+//	无返回值
+func DeleteDish(ctx *gin.Context) {
+	id := ctx.Param("id")
+	iid, _ := strconv.Atoi(id)
+	dish := Dish{ID: uint(iid)}
+	if err := DeleteData(ctx, &dish); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, gin.H{
+		"id":  id,
+		"msg": "删除成功",
+	})
+}
+
+// GetAllDishes 函数用于获取所有菜品信息
+//
+// 参数：
+//   - ctx *gin.Context：Gin框架的上下文对象
+//
+// 返回值：
+//
+//	无返回值
+func GetAllDishes(ctx *gin.Context) {
+	var dishes []Dish
+	if err := GetAllData(ctx, &dishes, nil); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, dishes)
+}
+
+// GetDishesByCategory 函数根据传入的分类获取对应的菜品列表
+// 参数：
+//
+//	ctx: *gin.Context - gin框架的上下文对象
+//
+// 返回值：
+//
+//	无
+func GetDishesByCategory(ctx *gin.Context) {
+	category := ctx.Param("category")
+	var dishes []Dish
+	if err := GetAllData(ctx, &dishes, DataQuery{"category": category}); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, dishes)
 }
