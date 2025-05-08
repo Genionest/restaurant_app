@@ -27,7 +27,7 @@ func InitDB() {
 	LoadConfig("db", DB_CONFIG)
 
 	conf := DB_CONFIG
-	fmt.Println(conf)
+	// fmt.Println(conf)
 
 	str := "%v:%v@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn := fmt.Sprintf(str,
@@ -49,6 +49,6 @@ func InitDB() {
 		log.Fatalf("Failed to configure database, got error %v", err)
 	}
 
-	fmt.Println(db)
+	// fmt.Println(db)
 	global.DB = db
 }

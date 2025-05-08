@@ -9,8 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type DataQuery map[string]interface{}
-
 // CreateData 函数用于创建一个数据对象，并将其保存到数据库中
 //
 // 参数：
@@ -25,7 +23,7 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 	if err := ctx.ShouldBindJSON(data); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
 			"error":  err.Error(),
-			"msg":    "ShouldBindJSON error",
+			"msg":    "ShouldBindJSON error(CreateData)",
 			"struct": *data,
 		})
 		return err
@@ -57,7 +55,7 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 //
 //	ctx *gin.Context: gin框架的上下文对象，用于处理HTTP请求和响应
 //	data *T: 一个指向泛型类型的指针，用于存储从数据库中获取的数据
-//	query DataQuery: 一个DataQuery类型的变量，用于指定查询条件
+//	query map[string]interface{}: 一个map类型的变量，用于指定查询条件
 //
 // 返回值：
 //
@@ -67,7 +65,10 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 //
 //	如果查询到的记录不存在，函数会以HTTP状态码404返回错误信息和查询条件；
 //	如果查询过程中出现其他错误，函数会以HTTP状态码500返回错误信息和查询条件。
-func GetData[T any](ctx *gin.Context, data *T, query DataQuery) error {
+func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) error {
+	// 这里query map[string]interface{}
+	// 不能使用type DataQuery map[string]interface{}
+	// 会无法识别
 	if err := global.DB.Where(query).First(data).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{
@@ -95,11 +96,11 @@ func GetData[T any](ctx *gin.Context, data *T, query DataQuery) error {
 // 参数：
 // ctx: *gin.Context - gin框架的上下文对象，用于处理HTTP请求和响应。
 // datas: *[]T - 指向切片类型的指针，用于存储查询结果。T为泛型类型，表示切片中元素的类型。
-// query: DataQuery - 查询条件，用于筛选数据库中的数据。
+// query: map[string]interface{} - 查询条件，用于筛选数据库中的数据。
 //
 // 返回值：
 // error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
-func GetAllData[T any](ctx *gin.Context, datas *[]T, query DataQuery) error {
+func GetAllData[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) error {
 	if err := global.DB.Where(query).Find(datas).Error; err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error":  err.Error(),
@@ -113,6 +114,15 @@ func GetAllData[T any](ctx *gin.Context, datas *[]T, query DataQuery) error {
 }
 
 func UpdateData[T any](ctx *gin.Context, data *T) error {
+	if err := ctx.ShouldBindJSON(data); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
+			"error":  err.Error(),
+			"msg":    "ShouldBindJSON error(UpdateData)",
+			"struct": *data,
+		})
+		return err
+	}
+
 	if err := global.DB.Model(data).Updates(data).Error; err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error":  err.Error(),
