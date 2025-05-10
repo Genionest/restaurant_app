@@ -4,9 +4,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"example.com/m/v2/model"
 	"github.com/gin-gonic/gin"
 )
+
+type Dish struct {
+	ID       uint `gorm:"primaryKey`
+	Name     string
+	Price    int
+	Category string
+}
 
 // AddDish 函数用于处理添加菜品的请求
 //
@@ -18,7 +24,7 @@ import (
 //
 //	无
 func AddDish(ctx *gin.Context) {
-	var dish model.Dish
+	var dish Dish
 	if err := CreateData(ctx, &dish); err != nil {
 		return
 	}
@@ -36,7 +42,7 @@ func AddDish(ctx *gin.Context) {
 //	无
 func GetDish(ctx *gin.Context) {
 	id := ctx.Param("id")
-	var dish model.Dish
+	var dish Dish
 	if err := GetData(ctx, &dish, map[string]interface{}{"id": id}); err != nil {
 		return
 	}
@@ -54,7 +60,7 @@ func GetDish(ctx *gin.Context) {
 //
 //	无
 func UpdateDish(ctx *gin.Context) {
-	var dish model.Dish
+	var dish Dish
 	if err := UpdateData(ctx, &dish); err != nil {
 		return
 	}
@@ -75,7 +81,7 @@ func UpdateDish(ctx *gin.Context) {
 func DeleteDish(ctx *gin.Context) {
 	id := ctx.Param("id")
 	iid, _ := strconv.Atoi(id)
-	dish := model.Dish{ID: uint(iid)}
+	dish := Dish{ID: uint(iid)}
 	if err := DeleteData(ctx, &dish); err != nil {
 		return
 	}
@@ -94,7 +100,7 @@ func DeleteDish(ctx *gin.Context) {
 //
 //	无返回值
 func GetAllDishes(ctx *gin.Context) {
-	var dishes []model.Dish
+	var dishes []Dish
 	if err := GetAllData(ctx, &dishes, nil); err != nil {
 		return
 	}
@@ -111,7 +117,7 @@ func GetAllDishes(ctx *gin.Context) {
 //	无
 func GetDishesByCategory(ctx *gin.Context) {
 	category := ctx.Param("category")
-	var dishes []model.Dish
+	var dishes []Dish
 	if err := GetAllData(ctx, &dishes, map[string]interface{}{"category": category}); err != nil {
 		return
 	}
