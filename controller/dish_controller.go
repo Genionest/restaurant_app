@@ -7,13 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Dish struct {
-	ID       uint `gorm:"primaryKey`
-	Name     string
-	Price    int
-	Category string
-}
-
 // AddDish 函数用于处理添加菜品的请求
 //
 // 参数:
@@ -122,4 +115,27 @@ func GetDishesByCategory(ctx *gin.Context) {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)
+}
+
+// GetAllRecords 函数用于获取所有记录信息
+//
+// 参数：
+//   - ctx: *gin.Context - gin 框架的上下文对象，用于获取请求参数和返回响应
+//
+// 返回值：
+//   - 无
+func GetAllRecords(ctx *gin.Context) {
+	var records []Record
+	if err := GetAllData(ctx, &records, nil); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, records)
+}
+
+func GetRecentRecords(ctx *gin.Context) {
+	var records []Record
+	if err := GetAllData(ctx, &records, nil); err != nil {
+		return
+	}
+
 }
