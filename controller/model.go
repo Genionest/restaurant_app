@@ -13,3 +13,8 @@ type Record struct {
 	Time   string
 	Count  int
 }
+
+type Bill struct {
+	DishID uint
+	Count  int
+}

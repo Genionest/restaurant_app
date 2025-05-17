@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"example.com/m/v2/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ func SetupRouter() *gin.Engine {
 	// r.TrustedPlatform = gin.PlatformGoogleAppEngine // 信任 Google App Engine 平台
 
 	// 日志中间件测试, 要放在前面，不然被cors中间件拦截了
-	// r.Use(middleware.RequestLogger())
+	r.Use(middleware.RequestLogger())
 
 	// 跨域请求中间件
 	r.Use(cors.New(cors.Config{
@@ -66,6 +67,7 @@ func SetupRouter() *gin.Engine {
 		api.GET("/get_dish/:id", GetDish)
 		api.GET("/get_dishes", GetAllDishes)
 		api.GET("/get_dishes_by_category/:category", GetDishesByCategory)
+		api.GET("/get_total_price", GetTotalPrice)
 	}
 	// api.USE(middleware)
 

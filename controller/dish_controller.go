@@ -139,3 +139,17 @@ func GetRecentRecords(ctx *gin.Context) {
 	}
 
 }
+
+func GetTotalPrice(ctx *gin.Context) {
+	totalPrice := 0
+	var bills []Bill
+	BindJSON(ctx, &bills)
+	for _, bill := range bills {
+		var dish Dish
+		GetData(ctx, &dish, map[string]interface{}{"id": bill.DishID})
+		totalPrice += dish.Price * bill.Count
+	}
+	ctx.IndentedJSON(http.StatusOK, gin.H{
+		"total_price": totalPrice,
+	})
+}

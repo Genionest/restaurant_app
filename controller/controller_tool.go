@@ -154,3 +154,27 @@ func DeleteData[T any](ctx *gin.Context, data *T) error {
 	}
 	return nil
 }
+
+// BindJSON 是一个泛型函数，用于将传入的 JSON 数据绑定到指定的结构体指针中。
+// 参数 ctx 是 gin 框架的上下文对象，data 是要绑定的结构体指针。
+// 如果绑定成功，函数返回 nil；如果绑定失败，函数将返回错误信息。
+//
+// 参数:
+//
+//	ctx *gin.Context: gin 框架的上下文对象
+//	data *T: 要绑定的结构体指针
+//
+// 返回值:
+//
+//	error: 如果绑定失败，返回错误信息；否则返回 nil
+func BindJSON[T any](ctx *gin.Context, data *T) error {
+	if err := ctx.ShouldBindJSON(data); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
+			"error":  err.Error(),
+			"msg":    "ShouldBindJSON error(My BindJSON)",
+			"struct": *data,
+		})
+		return err
+	}
+	return nil
+}
