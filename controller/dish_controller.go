@@ -36,7 +36,8 @@ func AddDish(ctx *gin.Context) {
 func GetDish(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var dish Dish
-	if err := GetData(ctx, &dish, map[string]interface{}{"id": id}); err != nil {
+	query := map[string]interface{}{"id": id}
+	if err := GetData(ctx, &dish, query); err != nil {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dish)
@@ -111,7 +112,8 @@ func GetAllDishes(ctx *gin.Context) {
 func GetDishesByCategory(ctx *gin.Context) {
 	category := ctx.Param("category")
 	var dishes []Dish
-	if err := GetAllData(ctx, &dishes, map[string]interface{}{"category": category}); err != nil {
+	query := map[string]interface{}{"category": category}
+	if err := GetAllData(ctx, &dishes, query); err != nil {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)
@@ -143,10 +145,16 @@ func GetRecentRecords(ctx *gin.Context) {
 func GetTotalPrice(ctx *gin.Context) {
 	totalPrice := 0
 	var bills []Bill
-	BindJSON(ctx, &bills)
+	if err := BindJSON(ctx, &bills); err != nil {
+		return
+	}
+	query := map[string]interface{}{"id": 0}
 	for _, bill := range bills {
 		var dish Dish
-		GetData(ctx, &dish, map[string]interface{}{"id": bill.DishID})
+		query["id"] = bill.DishID
+		if err := GetData(ctx, &dish, query); err != nil {
+			return
+		}
 		totalPrice += dish.Price * bill.Count
 	}
 	ctx.IndentedJSON(http.StatusOK, gin.H{

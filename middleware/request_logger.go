@@ -11,6 +11,7 @@ import (
 // 自定义中间件：记录请求详细信息
 func RequestLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Println()
 		// 记录请求基本信息
 		log.Printf("Request Method: %s", c.Request.Method)
 		// log.Printf("Request URL: %s", c.Request.URL.String())
@@ -40,6 +41,7 @@ func RequestLogger() gin.HandlerFunc {
 			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			log.Printf("Request Body: %s", string(bodyBytes))
 		}
+		log.Println()
 
 		// 继续处理请求
 		c.Next()

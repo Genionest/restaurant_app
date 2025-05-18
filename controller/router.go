@@ -1,14 +1,49 @@
 package controller
 
 import (
-	"net"
-	"net/url"
+	"log"
+	"net/http"
 	"time"
 
 	"example.com/m/v2/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+func MyAllowOriginFunc(origin string) bool {
+	// 允许无 Origin 头的请求（如直接 API 调用）
+	if origin == "" {
+		return true
+	}
+	if origin == "http://127.0.0.1:5173" {
+		return true
+	} else if origin == "http://localhost:5173" {
+		return true
+	}
+
+	log.Println()
+	log.Printf("origin don't be allowed: %v\n", origin)
+	log.Println()
+
+	// // 解析 Origin 的 URL
+	// parsedOrigin, err := url.Parse(origin)
+	// if err != nil {
+	// 	return false
+	// }
+
+	// // 提取主机名（IP 或域名）
+	// host := parsedOrigin.Hostname()
+	// 验证 IP 是否为允许的地址
+	// allowedIP := "127.0.0.1"
+	// if net.ParseIP(host).String() == allowedIP {
+	// 	return true
+	// }
+
+	// 如果需要验证域名，可以在此添加逻辑
+	// if host == "example.com" { ... }
+
+	return false
+}
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
@@ -17,42 +52,57 @@ func SetupRouter() *gin.Engine {
 	Recovery 中间件：自动捕获处理请求时发生的 panic，防止程序崩溃，并返回 500 错误。
 	*/
 
+	// 禁用自动修正路径
+	r.RedirectTrailingSlash = false
+	r.RedirectFixedPath = false
+
+	// middleware需要在router注册之前
+
 	r.SetTrustedProxies([]string{"127.0.0.1"}) // 信任本地代理
 	// r.TrustedPlatform = gin.PlatformGoogleAppEngine // 信任 Google App Engine 平台
+
+	// gin会先匹配路径(router注册的)，再匹配方法(请求method)
+	// 判断路径是否正确
+	r.NoRoute(func(c *gin.Context) {
+		log.Println()
+		log.Printf("Path not found: %s\n", c.Request.URL.Path)
+		log.Println()
+		// 如果是路径不存在，保持默认 404
+		c.IndentedJSON(http.StatusNotFound, gin.H{
+			"error": "Path Not Found",
+			"path":  c.Request.URL.Path,
+		})
+		// return
+	})
+
+	// 需要开启这个选项，r.NoMethod()才会生效
+	r.HandleMethodNotAllowed = true
+	// 判断方法是否正确
+	r.NoMethod(func(c *gin.Context) {
+		// 检查状态码
+		// 获取相关的请求信息
+		requestMethod := c.Request.Method
+		requestPath := c.Request.URL.Path
+		// 打印请求信息
+		log.Println()
+		log.Printf("Method '%s' is not allowed, Path: %s\n", requestMethod, requestPath)
+		log.Println()
+		// 返回状态码405
+		c.IndentedJSON(http.StatusMethodNotAllowed, gin.H{
+			"error":   "method not allowed",
+			"methods": c.Request.Method,
+			"path":    c.Request.URL.Path,
+		})
+	})
 
 	// 日志中间件测试, 要放在前面，不然被cors中间件拦截了
 	r.Use(middleware.RequestLogger())
 
 	// 跨域请求中间件
 	r.Use(cors.New(cors.Config{
-		// AllowOrigins:     []string{"http://127.0.0.1:5173"},
-		AllowOriginFunc: func(origin string) bool {
-			// 允许无 Origin 头的请求（如直接 API 调用）
-			if origin == "" {
-				return true
-			}
-
-			// 解析 Origin 的 URL
-			parsedOrigin, err := url.Parse(origin)
-			if err != nil {
-				return false
-			}
-
-			// 提取主机名（IP 或域名）
-			host := parsedOrigin.Hostname()
-
-			// 验证 IP 是否为允许的地址
-			allowedIP := "127.0.0.1"
-			if net.ParseIP(host).String() == allowedIP {
-				return true
-			}
-
-			// 如果需要验证域名，可以在此添加逻辑
-			// if host == "example.com" { ... }
-
-			return false
-		},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		// AllowOrigins: []string{"http://127.0.0.1:5173"},
+		AllowOriginFunc:  MyAllowOriginFunc,
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -67,14 +117,15 @@ func SetupRouter() *gin.Engine {
 		api.GET("/get_dish/:id", GetDish)
 		api.GET("/get_dishes", GetAllDishes)
 		api.GET("/get_dishes_by_category/:category", GetDishesByCategory)
-		api.GET("/get_total_price", GetTotalPrice)
+		api.POST("/get_total_price", GetTotalPrice)
 	}
+	// r.GET("/api/get_total_price", GetTotalPrice)
 	// api.USE(middleware)
 
 	admin := r.Group("/admin")
 	{
 		admin.POST("/add_dish", AddDish)
-		admin.POST("/update_dish", UpdateDish)
+		admin.PUT("/update_dish", UpdateDish)
 		admin.POST("/delete_dish", DeleteDish)
 	}
 
