@@ -1,10 +1,21 @@
 import { serviceConfig } from './config.js';
+import { ErrorHandler } from './errorHandler.js';
+
+async function handleResponse(response) {
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const errorMessage = data.message || 
+                            (data.error && typeof data.error === 'string' ? data.error : '请求失败');
+        const errorDetails = data.details ? `\n详情: ${JSON.stringify(data.details)}` : '';
+        throw new Error(`${errorMessage}${errorDetails}`);
+    }
+    return data;
+}
 
 export async function fetchMenuData() {
     try {
         const response = await fetch(`${serviceConfig.backend.apiBaseUrl}/api/get_dishes`);
-        if (!response.ok) throw new Error('获取菜单失败');
-        const data = await response.json();
+        const data = await handleResponse(response);
         
         // 按分类组织数据
         return data.reduce((acc, item) => {
@@ -17,7 +28,7 @@ export async function fetchMenuData() {
             return acc;
         }, {});
     } catch (error) {
-        console.error('获取菜单数据出错:', error);
+        ErrorHandler.showError(error.message);
         return {};
     }
 }
@@ -30,16 +41,15 @@ export async function calculateTotalPrice(cartItems) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(cartItems.map(item => ({
-                Count: item.quantity || 1,
+                Price: item.price,
                 DishID: item.id
             })))
         });
         
-        if (!response.ok) throw new Error('计算总价失败');
-        const data = await response.json();
+        const data = await handleResponse(response);
         return data.total_price;
     } catch (error) {
-        console.error('计算总价出错:', error);
+        ErrorHandler.showError(error.message);
         return 0;
     }
 }

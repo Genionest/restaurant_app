@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"example.com/m/v2/global"
@@ -49,6 +50,38 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 	return nil
 }
 
+// CreateDataWithoutBind 函数用于在不绑定 JSON 请求体的情况下，将给定的数据对象保存到数据库中
+// 该函数会自动迁移数据库表结构，然后尝试创建数据记录
+//
+// 参数：
+//
+//	ctx *gin.Context: Gin 框架的上下文对象，用于处理 HTTP 请求和响应
+//	data *T: 指向任意类型数据的指针，该数据将被保存到数据库中
+//
+// 返回值：
+//
+//	error: 如果函数执行过程中出现错误，将返回一个非空 error 对象；否则返回 nil
+func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
+	if err := global.DB.AutoMigrate(data); err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"error":  "AutoMigrate error",
+			"msg":    err.Error(),
+			"struct": *data,
+		})
+		return err
+	}
+
+	if err := global.DB.Create(data).Error; err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"error":  "Create error",
+			"msg":    err.Error(),
+			"struct": *data,
+		})
+		return err
+	}
+	return nil
+}
+
 // GetData 是一个泛型函数，用于从数据库中获取数据
 //
 // 参数：
@@ -71,19 +104,25 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 	// 会无法识别
 	if err := global.DB.Where(query).First(data).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println()
+			log.Printf("Record not found\n")
+			log.Printf("query: %v\n", query)
+			log.Printf("struct: %v\n", *data)
+			log.Printf("%v\n", err.Error())
+			log.Println()
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{
-				"error":  err.Error(),
-				"msg":    "Record not found",
-				"query":  query,
-				"struct": *data,
+				"error": "Record not found",
 			})
 			return err
 		} else {
+			log.Println()
+			log.Printf("Query error\n")
+			log.Printf("query: %v\n", query)
+			log.Printf("struct: %v\n", *data)
+			log.Printf("%v\n", err.Error())
+			log.Println()
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-				"error":  err.Error(),
-				"msg":    "Query error",
-				"query":  query,
-				"struct": *data,
+				"error": "Query error",
 			})
 			return err
 		}
@@ -102,11 +141,14 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 // error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
 func GetAllData[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) error {
 	if err := global.DB.Where(query).Find(datas).Error; err != nil {
+		log.Println()
+		log.Printf("Query All error\n")
+		log.Printf("query: %v\n", query)
+		log.Printf("struct: %v\n", *datas)
+		log.Printf("%v\n", err.Error())
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  err.Error(),
-			"msg":    "Query All error",
-			"query":  query,
-			"struct": *datas,
+			"error": "Query All error",
 		})
 		return err
 	}
@@ -115,19 +157,25 @@ func GetAllData[T any](ctx *gin.Context, datas *[]T, query map[string]interface{
 
 func UpdateData[T any](ctx *gin.Context, data *T) error {
 	if err := ctx.ShouldBindJSON(data); err != nil {
+		log.Println()
+		log.Printf("ShouldBindJSON error(UpdateData)\n")
+		log.Printf("query: %v\n", *data)
+		log.Printf("%v\n", err.Error())
+		log.Println()
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error":  err.Error(),
-			"msg":    "ShouldBindJSON error(UpdateData)",
-			"struct": *data,
+			"error": "ShouldBindJSON error(UpdateData)",
 		})
 		return err
 	}
 
 	if err := global.DB.Model(data).Updates(data).Error; err != nil {
+		log.Println()
+		log.Printf("Update error\n")
+		log.Printf("query: %v\n", *data)
+		log.Printf("%v\n", err.Error())
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  err.Error(),
-			"msg":    "Update error",
-			"struct": *data,
+			"error": "Update error",
 		})
 		return err
 	}
@@ -145,10 +193,13 @@ func UpdateData[T any](ctx *gin.Context, data *T) error {
 //	error，如果删除数据时出现错误，则返回错误对象；否则返回 nil
 func DeleteData[T any](ctx *gin.Context, data *T) error {
 	if err := global.DB.Delete(data).Error; err != nil {
+		log.Println()
+		log.Printf("Delete error\n")
+		log.Printf("query: %v\n", *data)
+		log.Printf("%v\n", err.Error())
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  err.Error(),
-			"msg":    "Delete error",
-			"struct": *data,
+			"error": "Delete error",
 		})
 		return err
 	}
@@ -169,10 +220,13 @@ func DeleteData[T any](ctx *gin.Context, data *T) error {
 //	error: 如果绑定失败，返回错误信息；否则返回 nil
 func BindJSON[T any](ctx *gin.Context, data *T) error {
 	if err := ctx.ShouldBindJSON(data); err != nil {
+		log.Println()
+		log.Printf("ShouldBindJSON error(My BindJSON)\n")
+		log.Printf("query: %v\n", *data)
+		log.Printf("%v\n", err.Error())
+		log.Println()
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error":  err.Error(),
-			"msg":    "ShouldBindJSON error(My BindJSON)",
-			"struct": *data,
+			"error": "ShouldBindJSON error(My BindJSON)",
 		})
 		return err
 	}

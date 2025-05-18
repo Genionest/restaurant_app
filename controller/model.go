@@ -1,7 +1,7 @@
 package controller
 
 type Dish struct {
-	ID       uint `gorm:"primaryKey`
+	ID       uint `gorm:"primaryKey"`
 	Name     string
 	Price    int
 	Category string

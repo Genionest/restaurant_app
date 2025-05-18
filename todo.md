@@ -10,4 +10,4 @@ Todo:
 
 实现前端
 
-后端go + 数据库mysql + 缓存redis + 前端vite 
+后端go/gin + 数据库mysql + 缓存redis + 前端TypeScript/vite + 部署nginx

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -61,7 +62,10 @@ func UpdateDish(ctx *gin.Context) {
 	// var new_dish Dish
 	// GetData(ctx, &new_dish, DataQuery{"id": dish.ID})
 	// ctx.IndentedJSON(http.StatusOK, new_dish)
-	ctx.IndentedJSON(http.StatusOK, dish)
+	// ctx.IndentedJSON(http.StatusOK, dish)
+	log.Println()
+	log.Printf("Update dish: %v\n", dish)
+	ctx.IndentedJSON(http.StatusNoContent, nil)
 }
 
 // DeleteDish 函数用于删除菜品
@@ -79,10 +83,13 @@ func DeleteDish(ctx *gin.Context) {
 	if err := DeleteData(ctx, &dish); err != nil {
 		return
 	}
-	ctx.IndentedJSON(http.StatusOK, gin.H{
-		"id":  id,
-		"msg": "删除成功",
-	})
+	// ctx.IndentedJSON(http.StatusOK, gin.H{
+	// 	"id":  id,
+	// 	"msg": "删除成功",
+	// })
+	log.Println()
+	log.Printf("Delete dish: %s\n", id)
+	ctx.IndentedJSON(http.StatusNoContent, nil)
 }
 
 // GetAllDishes 函数用于获取所有菜品信息
@@ -119,29 +126,14 @@ func GetDishesByCategory(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, dishes)
 }
 
-// GetAllRecords 函数用于获取所有记录信息
+// GetTotalPrice 函数计算并返回账单总金额
+// 参数:
 //
-// 参数：
-//   - ctx: *gin.Context - gin 框架的上下文对象，用于获取请求参数和返回响应
+//	ctx: gin的上下文对象，用于处理HTTP请求和响应
 //
-// 返回值：
-//   - 无
-func GetAllRecords(ctx *gin.Context) {
-	var records []Record
-	if err := GetAllData(ctx, &records, nil); err != nil {
-		return
-	}
-	ctx.IndentedJSON(http.StatusOK, records)
-}
-
-func GetRecentRecords(ctx *gin.Context) {
-	var records []Record
-	if err := GetAllData(ctx, &records, nil); err != nil {
-		return
-	}
-
-}
-
+// 返回值:
+//
+//	无返回值，通过gin的上下文对象返回总金额
 func GetTotalPrice(ctx *gin.Context) {
 	totalPrice := 0
 	var bills []Bill
@@ -155,7 +147,18 @@ func GetTotalPrice(ctx *gin.Context) {
 		if err := GetData(ctx, &dish, query); err != nil {
 			return
 		}
-		totalPrice += dish.Price * bill.Count
+		// 防止篡改价格
+		price := dish.Price
+		// 防止篡改数量
+		cnt := bill.Count
+		if cnt <= 0 {
+			log.Printf("Count must be positive, dish_id: %d, count: %d\n", bill.DishID, cnt)
+			ctx.IndentedJSON(http.StatusBadRequest, gin.H{
+				"error": "Count must be positive",
+			})
+			return
+		}
+		totalPrice += price * cnt
 	}
 	ctx.IndentedJSON(http.StatusOK, gin.H{
 		"total_price": totalPrice,

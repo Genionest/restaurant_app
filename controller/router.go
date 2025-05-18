@@ -89,7 +89,7 @@ func SetupRouter() *gin.Engine {
 		log.Println()
 		// 返回状态码405
 		c.IndentedJSON(http.StatusMethodNotAllowed, gin.H{
-			"error":   "method not allowed",
+			"error":   "Method Not Allowed",
 			"methods": c.Request.Method,
 			"path":    c.Request.URL.Path,
 		})
@@ -117,7 +117,7 @@ func SetupRouter() *gin.Engine {
 		api.GET("/get_dish/:id", GetDish)
 		api.GET("/get_dishes", GetAllDishes)
 		api.GET("/get_dishes_by_category/:category", GetDishesByCategory)
-		api.POST("/get_total_price", GetTotalPrice)
+		api.GET("/get_total_price", GetTotalPrice)
 	}
 	// r.GET("/api/get_total_price", GetTotalPrice)
 	// api.USE(middleware)
@@ -126,7 +126,7 @@ func SetupRouter() *gin.Engine {
 	{
 		admin.POST("/add_dish", AddDish)
 		admin.PUT("/update_dish", UpdateDish)
-		admin.POST("/delete_dish", DeleteDish)
+		admin.DELETE("/delete_dish", DeleteDish)
 	}
 
 	return r

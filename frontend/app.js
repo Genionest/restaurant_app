@@ -60,6 +60,28 @@ class RestaurantApp {
 
         // 购物车展开/收起
         this.elements.cartSummary.addEventListener('click', this.toggleCartDetails.bind(this));
+
+        // 购物车数量调整
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('quantity-increase')) {
+                const itemId = parseInt(e.target.dataset.id);
+                this.adjustQuantity(itemId, 1);
+            } else if (e.target.classList.contains('quantity-decrease')) {
+                const itemId = parseInt(e.target.dataset.id);
+                this.adjustQuantity(itemId, -1);
+            }
+        });
+    }
+
+    async adjustQuantity(itemId, delta) {
+        const item = this.cartService.getCart().find(i => i.id === itemId);
+        if (item) {
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                this.cartService.removeItem(itemId);
+            }
+            await this.updateCart();
+        }
     }
 
     addToCart(itemId) {

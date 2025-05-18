@@ -57,7 +57,11 @@ export function renderCartItems(cartItems, onRemoveItem) {
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">¥${item.price.toFixed(2)}</div>
             </div>
-            <div class="cart-item-quantity">x${item.quantity}</div>
+            <div class="cart-item-quantity-controls">
+                <button class="quantity-decrease" data-id="${item.id}">-</button>
+                <span class="quantity-value">${item.quantity}</span>
+                <button class="quantity-increase" data-id="${item.id}">+</button>
+            </div>
             <button class="remove-item" data-id="${item.id}">×</button>
         `;
         cartItem.querySelector('.remove-item').addEventListener('click', () => onRemoveItem(item.id));
