@@ -1,7 +1,8 @@
 import { serviceConfig } from './config.js';
-import { fetchMenuData } from './apiService.js';
+import { fetchMenuData, submitOrder } from './apiService.js';
 import { renderCategories, renderMenuItems } from './menuView.js';
 import { CartService, renderCartItems } from './cartService.js';
+import { ErrorHandler } from './errorHandler.js';
 
 class RestaurantApp {
     constructor() {
@@ -42,9 +43,7 @@ class RestaurantApp {
     }
 
     setupEventListeners() {
-        // 分类点击事件已在renderCategories中设置
-        
-        // 添加到购物车
+        // 分类点击事件
         this.elements.menuItemsContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('add-to-cart')) {
                 const itemId = parseInt(e.target.dataset.id);
@@ -69,6 +68,8 @@ class RestaurantApp {
             } else if (e.target.classList.contains('quantity-decrease')) {
                 const itemId = parseInt(e.target.dataset.id);
                 this.adjustQuantity(itemId, -1);
+            } else if (e.target.classList.contains('checkout-btn')) {
+                this.submitOrder();
             }
         });
     }
@@ -111,6 +112,28 @@ class RestaurantApp {
         }
         
         renderCartItems(cart, (itemId) => this.removeFromCart(itemId));
+    }
+
+    async submitOrder() {
+        const cart = this.cartService.getCart();
+        if (cart.length === 0) {
+            ErrorHandler.showError('购物车为空，无法提交订单');
+            return;
+        }
+
+        try {
+            const result = await submitOrder(cart);
+            this.cartService.clearCart();
+            this.updateCart();
+            if (result && result.msg) {
+                ErrorHandler.showSuccess(result.msg);
+            } else {
+                ErrorHandler.showSuccess('订单提交成功');
+            }
+        } catch (error) {
+            console.error('提交订单失败:', error);
+            ErrorHandler.showError(error.message || '提交订单失败');
+        }
     }
 
     toggleCartDetails() {

@@ -22,28 +22,37 @@ import (
 //	error: 如果函数执行过程中出现错误，将返回一个非空error对象；否则返回nil
 func CreateData[T any](ctx *gin.Context, data *T) error {
 	if err := ctx.ShouldBindJSON(data); err != nil {
+		log.Println()
+		log.Printf("ShouldBindJSON error(CreateData)\n")
+		log.Printf("error: %s\n", err.Error())
+		log.Printf("struct: %+v\n", *data)
+		log.Println()
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error":  err.Error(),
-			"msg":    "ShouldBindJSON error(CreateData)",
-			"struct": *data,
+			"error": "ShouldBindJSON error(CreateData)",
 		})
 		return err
 	}
 
 	if err := global.DB.AutoMigrate(data); err != nil {
+		log.Println()
+		log.Printf("AutoMigrate error(CreateData)\n")
+		log.Printf("error: %s\n", err.Error())
+		log.Printf("struct: %+v\n", *data)
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  err.Error(),
-			"msg":    "AutoMigrate error",
-			"struct": *data,
+			"error": "AutoMigrate error",
 		})
 		return err
 	}
 
 	if err := global.DB.Create(data).Error; err != nil {
+		log.Println()
+		log.Printf("Create error(CreateData)\n")
+		log.Printf("error: %s\n", err.Error())
+		log.Printf("struct: %+v\n", *data)
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  err.Error(),
-			"msg":    "Create error",
-			"struct": *data,
+			"error": "Create error",
 		})
 		return err
 	}
@@ -63,19 +72,25 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 //	error: 如果函数执行过程中出现错误，将返回一个非空 error 对象；否则返回 nil
 func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
 	if err := global.DB.AutoMigrate(data); err != nil {
+		log.Println()
+		log.Printf("AutoMigrate error\n")
+		log.Printf("error: %s\n", err.Error())
+		log.Printf("struct: %+v\n", *data)
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  "AutoMigrate error",
-			"msg":    err.Error(),
-			"struct": *data,
+			"error": err.Error(),
 		})
 		return err
 	}
 
 	if err := global.DB.Create(data).Error; err != nil {
+		log.Println()
+		log.Printf("Create error\n")
+		log.Printf("error: %s\n", err.Error())
+		log.Printf("struct: %+v\n", *data)
+		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error":  "Create error",
-			"msg":    err.Error(),
-			"struct": *data,
+			"error": "Create error",
 		})
 		return err
 	}
@@ -130,7 +145,7 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 	return nil
 }
 
-// GetAllData 函数用于根据给定的查询条件从数据库中获取所有数据，并将结果存储到给定的切片中。
+// GetAllDatas 函数用于根据给定的查询条件从数据库中获取所有数据，并将结果存储到给定的切片中。
 //
 // 参数：
 // ctx: *gin.Context - gin框架的上下文对象，用于处理HTTP请求和响应。
@@ -139,7 +154,7 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 //
 // 返回值：
 // error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
-func GetAllData[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) error {
+func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) error {
 	if err := global.DB.Where(query).Find(datas).Error; err != nil {
 		log.Println()
 		log.Printf("Query All error\n")
@@ -149,6 +164,31 @@ func GetAllData[T any](ctx *gin.Context, datas *[]T, query map[string]interface{
 		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error": "Query All error",
+		})
+		return err
+	}
+	return nil
+}
+
+// GetManyDatas 函数用于根据给定的数据切片作为查询条件，从数据库中获取多条数据，并将结果存储到给定的切片中。
+//
+// 参数：
+// ctx: *gin.Context - gin框架的上下文对象，用于处理HTTP请求和响应。
+// datas: *[]T - 指向切片类型的指针，既作为查询条件，也用于存储查询结果。T为泛型类型，表示切片中元素的类型。
+//
+// 返回值：
+// error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
+func GetManyDatas[T any](ctx *gin.Context, datas *[]T) error {
+	origin := *datas
+	if err := global.DB.Where(datas).Find(datas).Error; err != nil {
+		log.Println()
+		log.Printf("Query Many error\n")
+		log.Printf("query: %v\n", origin)
+		log.Printf("struct: %v\n", *datas)
+		log.Printf("%v\n", err.Error())
+		log.Println()
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
+			"error": "Query Many error",
 		})
 		return err
 	}

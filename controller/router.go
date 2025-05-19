@@ -117,7 +117,9 @@ func SetupRouter() *gin.Engine {
 		api.GET("/get_dish/:id", GetDish)
 		api.GET("/get_dishes", GetAllDishes)
 		api.GET("/get_dishes_by_category/:category", GetDishesByCategory)
-		api.GET("/get_total_price", GetTotalPrice)
+		api.GET("/get_hot_dishes", GetHotDishes)
+		api.POST("/get_total_price", GetTotalPrice)
+		api.POST("/submit_order", SubmitOrder)
 	}
 	// r.GET("/api/get_total_price", GetTotalPrice)
 	// api.USE(middleware)

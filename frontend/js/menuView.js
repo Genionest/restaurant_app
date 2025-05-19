@@ -6,14 +6,22 @@ export function renderCategories(menuData, onCategoryClick) {
     const allItem = document.createElement('li');
     allItem.textContent = '全部';
     allItem.classList.add('active');
-    allItem.addEventListener('click', () => onCategoryClick('全部'));
+    allItem.addEventListener('click', function() {
+        document.querySelectorAll('.categories li').forEach(li => li.classList.remove('active'));
+        this.classList.add('active');
+        onCategoryClick('全部');
+    });
     categoriesContainer.appendChild(allItem);
     
     // 添加其他分类
     Object.keys(menuData).forEach(category => {
         const item = document.createElement('li');
         item.textContent = category;
-        item.addEventListener('click', () => onCategoryClick(category));
+        item.addEventListener('click', function() {
+            document.querySelectorAll('.categories li').forEach(li => li.classList.remove('active'));
+            this.classList.add('active');
+            onCategoryClick(category);
+        });
         categoriesContainer.appendChild(item);
     });
 }

@@ -102,7 +102,7 @@ func DeleteDish(ctx *gin.Context) {
 //	无返回值
 func GetAllDishes(ctx *gin.Context) {
 	var dishes []Dish
-	if err := GetAllData(ctx, &dishes, nil); err != nil {
+	if err := GetAllDatas(ctx, &dishes, nil); err != nil {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)
@@ -120,7 +120,45 @@ func GetDishesByCategory(ctx *gin.Context) {
 	category := ctx.Param("category")
 	var dishes []Dish
 	query := map[string]interface{}{"category": category}
-	if err := GetAllData(ctx, &dishes, query); err != nil {
+	if err := GetAllDatas(ctx, &dishes, query); err != nil {
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, dishes)
+}
+
+func GetHotDishes(ctx *gin.Context) {
+	// 获取所有record
+	var records []Record
+	if err := GetAllDatas(ctx, &records, nil); err != nil {
+		return
+	}
+	// 统计每个dish的count
+	dish_count := make(map[uint]int)
+	for _, record := range records {
+		dish_count[record.DishID] += record.Count
+	}
+	// 实现算法，获取map中value最大的前6个key
+	// 用一个数组动态维护前6个key
+	max_ids := make([]uint, 6)
+	for id, cnt := range dish_count {
+		for i := 0; i < 6; i++ {
+			if dish_count[max_ids[i]] < cnt {
+				// 其他元素往后移动
+				for j := 5; j > i; j-- {
+					max_ids[j] = max_ids[j-1]
+				}
+				// 插入到第i个位置
+				max_ids[i] = id
+				break // 插入成功，跳出循环
+			}
+		}
+	}
+	// 获取对应的dish
+	var dishes []Dish
+	for _, id := range max_ids {
+		dishes = append(dishes, Dish{ID: id})
+	}
+	if err := GetManyDatas(ctx, &dishes); err != nil {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)

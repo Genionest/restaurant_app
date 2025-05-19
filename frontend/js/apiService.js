@@ -4,10 +4,8 @@ import { ErrorHandler } from './errorHandler.js';
 async function handleResponse(response) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const errorMessage = data.message || 
-                            (data.error && typeof data.error === 'string' ? data.error : '请求失败');
-        const errorDetails = data.details ? `\n详情: ${JSON.stringify(data.details)}` : '';
-        throw new Error(`${errorMessage}${errorDetails}`);
+        const errorMessage = data.error || data.message || '请求失败';
+        throw new Error(errorMessage);
     }
     return data;
 }
@@ -17,7 +15,6 @@ export async function fetchMenuData() {
         const response = await fetch(`${serviceConfig.backend.apiBaseUrl}/api/get_dishes`);
         const data = await handleResponse(response);
         
-        // 按分类组织数据
         return data.reduce((acc, item) => {
             if (!acc[item.Category]) acc[item.Category] = [];
             acc[item.Category].push({
@@ -41,7 +38,7 @@ export async function calculateTotalPrice(cartItems) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(cartItems.map(item => ({
-                Price: item.price,
+                Count: item.quantity,
                 DishID: item.id
             })))
         });
@@ -51,5 +48,27 @@ export async function calculateTotalPrice(cartItems) {
     } catch (error) {
         ErrorHandler.showError(error.message);
         return 0;
+    }
+}
+
+export async function submitOrder(cartItems) {
+    try {
+        const response = await fetch(`${serviceConfig.backend.apiBaseUrl}/api/submit_order`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(cartItems.map(item => ({
+                Count: item.quantity,
+                DishID: item.id
+            })))
+        });
+        
+        const data = await handleResponse(response);
+        ErrorHandler.showSuccess(data.msg || '订单提交成功');
+        return data;
+    } catch (error) {
+        ErrorHandler.showError(error.message);
+        throw error;
     }
 }
