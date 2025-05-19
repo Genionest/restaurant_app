@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"example.com/m/v2/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -45,22 +44,7 @@ func MyAllowOriginFunc(origin string) bool {
 	return false
 }
 
-func SetupRouter() *gin.Engine {
-	r := gin.Default()
-	/* 相当于 gin.New() + Logger,Recovery中间件
-	Logger 中间件：自动记录 HTTP 请求的日志（如请求方法、路径、状态码、耗时等）。
-	Recovery 中间件：自动捕获处理请求时发生的 panic，防止程序崩溃，并返回 500 错误。
-	*/
-
-	// 禁用自动修正路径
-	r.RedirectTrailingSlash = false
-	r.RedirectFixedPath = false
-
-	// middleware需要在router注册之前
-
-	r.SetTrustedProxies([]string{"127.0.0.1"}) // 信任本地代理
-	// r.TrustedPlatform = gin.PlatformGoogleAppEngine // 信任 Google App Engine 平台
-
+func SetMiddlewares(r *gin.Engine) {
 	// gin会先匹配路径(router注册的)，再匹配方法(请求method)
 	// 判断路径是否正确
 	r.NoRoute(func(c *gin.Context) {
@@ -96,7 +80,7 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// 日志中间件测试, 要放在前面，不然被cors中间件拦截了
-	r.Use(middleware.RequestLogger())
+	// r.Use(middleware.RequestLogger())
 
 	// 跨域请求中间件
 	r.Use(cors.New(cors.Config{
@@ -111,6 +95,25 @@ func SetupRouter() *gin.Engine {
 		// },
 		MaxAge: 12 * time.Hour,
 	}))
+
+}
+
+func SetupRouter() *gin.Engine {
+	r := gin.Default()
+	/* 相当于 gin.New() + Logger,Recovery中间件
+	Logger 中间件：自动记录 HTTP 请求的日志（如请求方法、路径、状态码、耗时等）。
+	Recovery 中间件：自动捕获处理请求时发生的 panic，防止程序崩溃，并返回 500 错误。
+	*/
+
+	// 禁用自动修正路径
+	r.RedirectTrailingSlash = false
+	r.RedirectFixedPath = false
+
+	r.SetTrustedProxies([]string{"127.0.0.1"}) // 信任本地代理
+	// r.TrustedPlatform = gin.PlatformGoogleAppEngine // 信任 Google App Engine 平台
+
+	// middleware需要在router注册之前
+	SetMiddlewares(r)
 
 	api := r.Group("/api")
 	{

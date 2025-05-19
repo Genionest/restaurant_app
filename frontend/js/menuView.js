@@ -13,6 +13,16 @@ export function renderCategories(menuData, onCategoryClick) {
     });
     categoriesContainer.appendChild(allItem);
     
+    // 添加"热销"分类
+    const hotItem = document.createElement('li');
+    hotItem.textContent = '热销';
+    hotItem.addEventListener('click', function() {
+        document.querySelectorAll('.categories li').forEach(li => li.classList.remove('active'));
+        this.classList.add('active');
+        onCategoryClick('热销');
+    });
+    categoriesContainer.appendChild(hotItem);
+    
     // 添加其他分类
     Object.keys(menuData).forEach(category => {
         const item = document.createElement('li');

@@ -1,5 +1,5 @@
 import { serviceConfig } from './config.js';
-import { fetchMenuData, submitOrder } from './apiService.js';
+import { fetchMenuData, submitOrder, getHotDishes } from './apiService.js';
 import { renderCategories, renderMenuItems } from './menuView.js';
 import { CartService, renderCartItems } from './cartService.js';
 import { ErrorHandler } from './errorHandler.js';
@@ -7,6 +7,7 @@ import { ErrorHandler } from './errorHandler.js';
 class RestaurantApp {
     constructor() {
         this.menuData = {};
+        this.hotDishes = null; // 缓存热销菜品
         this.cartService = new CartService();
         this.initElements();
     }
@@ -36,10 +37,24 @@ class RestaurantApp {
     }
 
     async loadMenuItems(category) {
-        const items = category === '全部' 
-            ? Object.values(this.menuData).flat() 
-            : this.menuData[category];
-        renderMenuItems(items);
+        try {
+            let items = [];
+            if (category === '全部') {
+                items = Object.values(this.menuData).flat();
+            } else if (category === '热销') {
+                if (!this.hotDishes) {
+                    this.hotDishes = await getHotDishes();
+                }
+                items = this.hotDishes;
+                // alert(items)
+            } else {
+                items = this.menuData[category] || [];
+            }
+            renderMenuItems(items);
+        } catch (error) {
+            console.error('加载菜单项失败:', error);
+            renderMenuItems([]);
+        }
     }
 
     setupEventListeners() {
@@ -118,6 +133,12 @@ class RestaurantApp {
         const cart = this.cartService.getCart();
         if (cart.length === 0) {
             ErrorHandler.showError('购物车为空，无法提交订单');
+            return;
+        }
+
+        // 添加确认提示
+        const isConfirmed = confirm('确定要提交订单吗？');
+        if (!isConfirmed) {
             return;
         }
 

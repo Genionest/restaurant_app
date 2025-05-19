@@ -8,6 +8,7 @@ import (
 	"example.com/m/v2/global"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type DBConfig struct {
@@ -36,7 +37,10 @@ func InitDB() {
 		conf.Host,
 		conf.Port,
 		conf.Name)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	// 希望显示sql语句
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info), // 日志配置
+	})
 	if err != nil {
 		log.Fatalf("Failed to initialize database, got error %v", err)
 	}

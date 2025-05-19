@@ -158,9 +158,10 @@ func GetHotDishes(ctx *gin.Context) {
 	for _, id := range max_ids {
 		dishes = append(dishes, Dish{ID: id})
 	}
-	if err := GetManyDatas(ctx, &dishes); err != nil {
+	if err := GetManyDatas(ctx, &dishes, "id in ?", max_ids); err != nil {
 		return
 	}
+	// fmt.Println(dishes)
 	ctx.IndentedJSON(http.StatusOK, dishes)
 }
 

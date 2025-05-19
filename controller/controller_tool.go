@@ -170,17 +170,20 @@ func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface
 	return nil
 }
 
-// GetManyDatas 函数用于根据给定的数据切片作为查询条件，从数据库中获取多条数据，并将结果存储到给定的切片中。
+// GetManyDatas 函数用于根据给定的 SQL 查询语句和参数，从数据库中获取多条数据，并将结果存储到给定的切片中。
+// 这是一个泛型函数，支持处理任意类型的数据。
 //
 // 参数：
-// ctx: *gin.Context - gin框架的上下文对象，用于处理HTTP请求和响应。
-// datas: *[]T - 指向切片类型的指针，既作为查询条件，也用于存储查询结果。T为泛型类型，表示切片中元素的类型。
+// ctx: *gin.Context - gin 框架的上下文对象，用于处理 HTTP 请求和响应。
+// datas: *[]T - 指向切片类型的指针，用于存储查询结果。T 为泛型类型，表示切片中元素的类型。
+// query: string - SQL 查询语句，用于指定查询条件。
+// args ...interface{} - 可变参数，用于填充查询语句中的占位符。
 //
 // 返回值：
-// error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
-func GetManyDatas[T any](ctx *gin.Context, datas *[]T) error {
+// error - 如果查询过程中发生错误，则返回错误信息；否则返回 nil。
+func GetManyDatas[T any](ctx *gin.Context, datas *[]T, query string, args ...interface{}) error {
 	origin := *datas
-	if err := global.DB.Where(datas).Find(datas).Error; err != nil {
+	if err := global.DB.Where(query, args...).Find(datas).Error; err != nil {
 		log.Println()
 		log.Printf("Query Many error\n")
 		log.Printf("query: %v\n", origin)

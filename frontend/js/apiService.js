@@ -51,6 +51,23 @@ export async function calculateTotalPrice(cartItems) {
     }
 }
 
+export async function getHotDishes() {
+    try {
+        const response = await fetch(`${serviceConfig.backend.apiBaseUrl}/api/get_hot_dishes`);
+        const data = await handleResponse(response);
+        
+        return data.map(item => ({
+            id: item.ID,
+            name: item.Name, 
+            price: item.Price,
+            category: item.Category
+        }));
+    } catch (error) {
+        ErrorHandler.showError(error.message);
+        return [];
+    }
+}
+
 export async function submitOrder(cartItems) {
     try {
         const response = await fetch(`${serviceConfig.backend.apiBaseUrl}/api/submit_order`, {
