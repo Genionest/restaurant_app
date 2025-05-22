@@ -4,9 +4,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"example.com/m/v2/global"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -19,8 +22,8 @@ import (
 //
 // 返回值：
 //
-//	error: 如果函数执行过程中出现错误，将返回一个非空error对象；否则返回nil
-func CreateData[T any](ctx *gin.Context, data *T) error {
+//	bool: 如果函数执行过程中出现错误，将返回一个非空true；否则返回false
+func CreateData[T any](ctx *gin.Context, data *T) bool {
 	if err := ctx.ShouldBindJSON(data); err != nil {
 		log.Println()
 		log.Printf("ShouldBindJSON error(CreateData)\n")
@@ -30,20 +33,10 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
 			"error": "ShouldBindJSON error(CreateData)",
 		})
-		return err
+		return false
 	}
 
-	if err := global.DB.AutoMigrate(data); err != nil {
-		log.Println()
-		log.Printf("AutoMigrate error(CreateData)\n")
-		log.Printf("error: %s\n", err.Error())
-		log.Printf("struct: %+v\n", *data)
-		log.Println()
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": "AutoMigrate error",
-		})
-		return err
-	}
+	// 后端启动时自动迁移数据库
 
 	if err := global.DB.Create(data).Error; err != nil {
 		log.Println()
@@ -54,9 +47,9 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error": "Create error",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
 // CreateDataWithoutBind 函数用于在不绑定 JSON 请求体的情况下，将给定的数据对象保存到数据库中
@@ -69,8 +62,8 @@ func CreateData[T any](ctx *gin.Context, data *T) error {
 //
 // 返回值：
 //
-//	error: 如果函数执行过程中出现错误，将返回一个非空 error 对象；否则返回 nil
-func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
+//	bool: 如果函数执行过程中出现错误，将返回一个false；否则返回 true
+func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) bool {
 	if err := global.DB.AutoMigrate(data); err != nil {
 		log.Println()
 		log.Printf("AutoMigrate error\n")
@@ -80,7 +73,7 @@ func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
-		return err
+		return false
 	}
 
 	if err := global.DB.Create(data).Error; err != nil {
@@ -92,9 +85,9 @@ func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
 			"error": "Create error",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
 // GetData 是一个泛型函数，用于从数据库中获取数据
@@ -107,13 +100,13 @@ func CreateDataWithoutBind[T any](ctx *gin.Context, data *T) error {
 //
 // 返回值：
 //
-//	error: 如果查询过程中出现错误，则返回错误信息；否则返回nil
+//	bool: 如果查询过程中出现错误，则返回错误false；否则返回true
 //
 // 备注：
 //
 //	如果查询到的记录不存在，函数会以HTTP状态码404返回错误信息和查询条件；
 //	如果查询过程中出现其他错误，函数会以HTTP状态码500返回错误信息和查询条件。
-func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) error {
+func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) bool {
 	// 这里query map[string]interface{}
 	// 不能使用type DataQuery map[string]interface{}
 	// 会无法识别
@@ -126,9 +119,9 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 			log.Printf("%v\n", err.Error())
 			log.Println()
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{
-				"error": "Record not found",
+				"error": "没有发现记录",
 			})
-			return err
+			return false
 		} else {
 			log.Println()
 			log.Printf("Query error\n")
@@ -137,12 +130,12 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 			log.Printf("%v\n", err.Error())
 			log.Println()
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-				"error": "Query error",
+				"error": "查询错误",
 			})
-			return err
+			return false
 		}
 	}
-	return nil
+	return true
 }
 
 // GetAllDatas 函数用于根据给定的查询条件从数据库中获取所有数据，并将结果存储到给定的切片中。
@@ -153,8 +146,8 @@ func GetData[T any](ctx *gin.Context, data *T, query map[string]interface{}) err
 // query: map[string]interface{} - 查询条件，用于筛选数据库中的数据。
 //
 // 返回值：
-// error - 如果查询过程中发生错误，则返回错误信息；否则返回nil。
-func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) error {
+// bool - 如果查询过程中发生错误，则返回错误false；否则返回true。
+func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface{}) bool {
 	if err := global.DB.Where(query).Find(datas).Error; err != nil {
 		log.Println()
 		log.Printf("Query All error\n")
@@ -163,11 +156,11 @@ func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": "Query All error",
+			"error": "批量查询错误",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
 // GetManyDatas 函数用于根据给定的 SQL 查询语句和参数，从数据库中获取多条数据，并将结果存储到给定的切片中。
@@ -180,8 +173,8 @@ func GetAllDatas[T any](ctx *gin.Context, datas *[]T, query map[string]interface
 // args ...interface{} - 可变参数，用于填充查询语句中的占位符。
 //
 // 返回值：
-// error - 如果查询过程中发生错误，则返回错误信息；否则返回 nil。
-func GetManyDatas[T any](ctx *gin.Context, datas *[]T, query string, args ...interface{}) error {
+// bool - 如果查询过程中发生错误，则返回false；否则返回 true。
+func GetManyDatas[T any](ctx *gin.Context, datas *[]T, query string, args ...interface{}) bool {
 	origin := *datas
 	if err := global.DB.Where(query, args...).Find(datas).Error; err != nil {
 		log.Println()
@@ -191,14 +184,14 @@ func GetManyDatas[T any](ctx *gin.Context, datas *[]T, query string, args ...int
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": "Query Many error",
+			"error": "局部查询错误",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
-func UpdateData[T any](ctx *gin.Context, data *T) error {
+func UpdateData[T any](ctx *gin.Context, data *T) bool {
 	if err := ctx.ShouldBindJSON(data); err != nil {
 		log.Println()
 		log.Printf("ShouldBindJSON error(UpdateData)\n")
@@ -206,9 +199,9 @@ func UpdateData[T any](ctx *gin.Context, data *T) error {
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error": "ShouldBindJSON error(UpdateData)",
+			"error": "更新数据时，匹配数据失败",
 		})
-		return err
+		return false
 	}
 
 	if err := global.DB.Model(data).Updates(data).Error; err != nil {
@@ -218,11 +211,11 @@ func UpdateData[T any](ctx *gin.Context, data *T) error {
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": "Update error",
+			"error": "更新失败",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
 // DeleteData 是一个泛型函数，用于删除指定类型的数据
@@ -233,8 +226,8 @@ func UpdateData[T any](ctx *gin.Context, data *T) error {
 //
 // 返回值：
 //
-//	error，如果删除数据时出现错误，则返回错误对象；否则返回 nil
-func DeleteData[T any](ctx *gin.Context, data *T) error {
+//	bool，如果删除数据时出现错误，则返回true；否则返回 false
+func DeleteData[T any](ctx *gin.Context, data *T) bool {
 	if err := global.DB.Delete(data).Error; err != nil {
 		log.Println()
 		log.Printf("Delete error\n")
@@ -242,16 +235,16 @@ func DeleteData[T any](ctx *gin.Context, data *T) error {
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-			"error": "Delete error",
+			"error": "删除错误",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
 // BindJSON 是一个泛型函数，用于将传入的 JSON 数据绑定到指定的结构体指针中。
 // 参数 ctx 是 gin 框架的上下文对象，data 是要绑定的结构体指针。
-// 如果绑定成功，函数返回 nil；如果绑定失败，函数将返回错误信息。
+// 如果绑定成功，函数返回true；如果绑定失败，函数将返回false。
 //
 // 参数:
 //
@@ -260,8 +253,8 @@ func DeleteData[T any](ctx *gin.Context, data *T) error {
 //
 // 返回值:
 //
-//	error: 如果绑定失败，返回错误信息；否则返回 nil
-func BindJSON[T any](ctx *gin.Context, data *T) error {
+//	bool: 如果绑定失败，返回false；否则返回true
+func BindJSON[T any](ctx *gin.Context, data *T) bool {
 	if err := ctx.ShouldBindJSON(data); err != nil {
 		log.Println()
 		log.Printf("ShouldBindJSON error(My BindJSON)\n")
@@ -269,9 +262,52 @@ func BindJSON[T any](ctx *gin.Context, data *T) error {
 		log.Printf("%v\n", err.Error())
 		log.Println()
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{
-			"error": "ShouldBindJSON error(My BindJSON)",
+			"error": "匹配数据失败",
 		})
-		return err
+		return false
 	}
-	return nil
+	return true
+}
+
+func EncryptPassword(data *string) (string, error) {
+	// 加密
+	hash, err := bcrypt.GenerateFromPassword([]byte(*data), bcrypt.DefaultCost)
+	return string(hash), err
+}
+
+func CheckPassword(data *string, hash *string) bool {
+	// 解密
+	err := bcrypt.CompareHashAndPassword([]byte(*hash), []byte(*data))
+	if err != nil {
+		log.Println()
+		log.Printf("CheckPassword error\n")
+		log.Printf("error: %s\n", err.Error())
+		return false
+	}
+	return true
+}
+
+func GenerateJWT(username *string) (string, error) {
+	// 生成token
+	// claims := jwt.StandardClaims{}
+	/*
+		Audience  string `json:"aud,omitempty"`
+		ExpiresAt int64  `json:"exp,omitempty"`
+		Id        string `json:"jti,omitempty"`
+		IssuedAt  int64  `json:"iat,omitempty"`
+		Issuer    string `json:"iss,omitempty"`
+		NotBefore int64  `json:"nbf,omitempty"`
+		Subject   string `json:"sub,omitempty"`
+	*/
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"username": username,
+		"nbf":      time.Now().Unix(),
+		"exp":      time.Now().Add(time.Hour * 2).Unix(),
+		"update":   time.Now().Add(time.Minute * 90).Unix(),
+	})
+	// 加密
+	signKey := []byte("secret")
+	signedToken, err := token.SignedString(signKey)
+	signedToken = "Bearer " + signedToken
+	return signedToken, err
 }

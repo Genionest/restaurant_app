@@ -11,3 +11,7 @@ Todo:
 实现前端
 
 后端go/gin + 数据库mysql + 缓存redis + 前端TypeScript/vite + 部署nginx
+
+
+添加登陆界面，管理员登陆，增删改查，
+使用JWT

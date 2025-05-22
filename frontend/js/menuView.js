@@ -44,7 +44,7 @@ export function renderMenuItems(items) {
         const itemElement = document.createElement('div');
         itemElement.className = 'menu-item';
         itemElement.innerHTML = `
-            <div class="item-image"></div>
+            <div class="item-image" style="background-image: url(${item.img || ''})"></div>
             <div class="item-info">
                 <h4>${item.name}</h4>
                 <p>¥${item.price.toFixed(2)}</p>

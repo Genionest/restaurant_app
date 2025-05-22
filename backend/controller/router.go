@@ -86,7 +86,7 @@ func SetMiddlewares(r *gin.Engine) {
 	r.Use(cors.New(cors.Config{
 		// AllowOrigins: []string{"http://127.0.0.1:5173"},
 		AllowOriginFunc:  MyAllowOriginFunc,
-		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -98,6 +98,8 @@ func SetMiddlewares(r *gin.Engine) {
 
 }
 
+// SetupRouter 用于初始化并配置 Gin 路由引擎，设置中间件和注册 API 路由。
+// 返回一个配置好的 *gin.Engine 实例，供后续启动 HTTP 服务使用。
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	/* 相当于 gin.New() + Logger,Recovery中间件

@@ -20,7 +20,8 @@ export async function fetchMenuData() {
             acc[item.Category].push({
                 id: item.ID,
                 name: item.Name,
-                price: item.Price
+                price: item.Price,
+                img: item.Img
             });
             return acc;
         }, {});
@@ -60,7 +61,8 @@ export async function getHotDishes() {
             id: item.ID,
             name: item.Name, 
             price: item.Price,
-            category: item.Category
+            category: item.Category,
+            img: item.Img
         }));
     } catch (error) {
         ErrorHandler.showError(error.message);

@@ -2,7 +2,7 @@
 export const serviceConfig = {
     frontend: {
         host: 'localhost',
-        port: 3000
+        port: 5137
     },
     backend: {
         apiBaseUrl: 'http://localhost:8080' // 默认后端地址

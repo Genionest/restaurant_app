@@ -16,6 +16,8 @@ type RedisDBConfig struct {
 
 var REDIS_DB_CONFIG = &RedisDBConfig{}
 
+// InitRedis 初始化 Redis 客户端连接，加载 Redis 配置信息并建立与 Redis 服务器的连接。
+// 连接成功后，将 Redis 客户端实例存储到全局变量中供后续使用。
 func InitRedis() {
 	// configRedisDB()
 	LoadConfig("redis", REDIS_DB_CONFIG)

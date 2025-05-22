@@ -19,7 +19,7 @@ import (
 //   - 无
 func GetAllRecords(ctx *gin.Context) {
 	var records []Record
-	if err := GetAllDatas(ctx, &records, nil); err != nil {
+	if ok := GetAllDatas(ctx, &records, nil); !ok {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, records)
@@ -35,14 +35,14 @@ func GetAllRecords(ctx *gin.Context) {
 // 无返回值
 func GetRecentRecords(ctx *gin.Context) {
 	var records []Record
-	if err := GetAllDatas(ctx, &records, nil); err != nil {
+	if ok := GetAllDatas(ctx, &records, nil); !ok {
 		return
 	}
 }
 
 func SubmitOrder(ctx *gin.Context) {
 	var bills []Bill
-	if err := BindJSON(ctx, &bills); err != nil {
+	if ok := BindJSON(ctx, &bills); !ok {
 		return
 	}
 	for _, bill := range bills {

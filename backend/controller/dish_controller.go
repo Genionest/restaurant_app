@@ -19,7 +19,7 @@ import (
 //	无
 func AddDish(ctx *gin.Context) {
 	var dish Dish
-	if err := CreateData(ctx, &dish); err != nil {
+	if ok := CreateData(ctx, &dish); !ok {
 		return
 	}
 
@@ -38,7 +38,7 @@ func GetDish(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var dish Dish
 	query := map[string]interface{}{"id": id}
-	if err := GetData(ctx, &dish, query); err != nil {
+	if ok := GetData(ctx, &dish, query); !ok {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dish)
@@ -56,7 +56,7 @@ func GetDish(ctx *gin.Context) {
 //	无
 func UpdateDish(ctx *gin.Context) {
 	var dish Dish
-	if err := UpdateData(ctx, &dish); err != nil {
+	if ok := UpdateData(ctx, &dish); !ok {
 		return
 	}
 	// var new_dish Dish
@@ -80,7 +80,7 @@ func DeleteDish(ctx *gin.Context) {
 	id := ctx.Param("id")
 	iid, _ := strconv.Atoi(id)
 	dish := Dish{ID: uint(iid)}
-	if err := DeleteData(ctx, &dish); err != nil {
+	if ok := DeleteData(ctx, &dish); !ok {
 		return
 	}
 	// ctx.IndentedJSON(http.StatusOK, gin.H{
@@ -102,7 +102,7 @@ func DeleteDish(ctx *gin.Context) {
 //	无返回值
 func GetAllDishes(ctx *gin.Context) {
 	var dishes []Dish
-	if err := GetAllDatas(ctx, &dishes, nil); err != nil {
+	if ok := GetAllDatas(ctx, &dishes, nil); !ok {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)
@@ -120,7 +120,7 @@ func GetDishesByCategory(ctx *gin.Context) {
 	category := ctx.Param("category")
 	var dishes []Dish
 	query := map[string]interface{}{"category": category}
-	if err := GetAllDatas(ctx, &dishes, query); err != nil {
+	if ok := GetAllDatas(ctx, &dishes, query); !ok {
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, dishes)
@@ -129,7 +129,7 @@ func GetDishesByCategory(ctx *gin.Context) {
 func GetHotDishes(ctx *gin.Context) {
 	// 获取所有record
 	var records []Record
-	if err := GetAllDatas(ctx, &records, nil); err != nil {
+	if ok := GetAllDatas(ctx, &records, nil); !ok {
 		return
 	}
 	// 统计每个dish的count
@@ -158,7 +158,7 @@ func GetHotDishes(ctx *gin.Context) {
 	for _, id := range max_ids {
 		dishes = append(dishes, Dish{ID: id})
 	}
-	if err := GetManyDatas(ctx, &dishes, "id in ?", max_ids); err != nil {
+	if ok := GetManyDatas(ctx, &dishes, "id in ?", max_ids); !ok {
 		return
 	}
 	// fmt.Println(dishes)
@@ -176,14 +176,14 @@ func GetHotDishes(ctx *gin.Context) {
 func GetTotalPrice(ctx *gin.Context) {
 	totalPrice := 0
 	var bills []Bill
-	if err := BindJSON(ctx, &bills); err != nil {
+	if ok := BindJSON(ctx, &bills); !ok {
 		return
 	}
 	query := map[string]interface{}{"id": 0}
 	for _, bill := range bills {
 		var dish Dish
 		query["id"] = bill.DishID
-		if err := GetData(ctx, &dish, query); err != nil {
+		if ok := GetData(ctx, &dish, query); !ok {
 			return
 		}
 		// 防止篡改价格

@@ -5,6 +5,7 @@ type Dish struct {
 	Name     string
 	Price    int
 	Category string
+	Img      string
 }
 
 type Record struct {
@@ -15,6 +16,14 @@ type Record struct {
 }
 
 type Bill struct {
+	// no database
 	DishID uint
 	Count  int
+}
+
+type User struct {
+	ID       uint `gorm:"primaryKey"`
+	Username string
+	Password string
+	Role     string
 }

@@ -23,6 +23,7 @@ type DBConfig struct {
 
 var DB_CONFIG = &DBConfig{}
 
+// InitDB 初始化数据库连接，加载配置并建立与数据库的连接，同时配置连接池
 func InitDB() {
 	// configDB()
 	LoadConfig("db", DB_CONFIG)
