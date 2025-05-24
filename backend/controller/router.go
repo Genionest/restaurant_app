@@ -129,6 +129,12 @@ func SetupRouter() *gin.Engine {
 	// r.GET("/api/get_total_price", GetTotalPrice)
 	// api.USE(middleware)
 
+	user := r.Group("/user")
+	{
+		user.POST("/user_login", UserLogin)
+		user.POST("/user_register", UserRegister)
+	}
+
 	admin := r.Group("/admin")
 	{
 		admin.POST("/add_dish", AddDish)
