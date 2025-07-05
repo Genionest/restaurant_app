@@ -5,7 +5,7 @@ export const serviceConfig = {
         port: 5173
     },
     backend: {
-        apiBaseUrl: 'http://127.0.0.1:8080' // 默认后端地址
+        apiBaseUrl: 'http://localhost:8090' // 默认后端地址
     }
 };
 
@@ -18,3 +18,4 @@ export function updateServiceConfig(newConfig) {
 export function getFrontendUrl() {
     return `http://${serviceConfig.frontend.host}:${serviceConfig.frontend.port}`;
 }
+

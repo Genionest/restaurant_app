@@ -11,17 +11,18 @@ import (
 
 func MyAllowOriginFunc(origin string) bool {
 	// 允许无 Origin 头的请求（如直接 API 调用）
-	if origin == "" {
-		return true
-	}
-	if origin == "http://127.0.0.1:5173" {
-		return true
-	} else if origin == "http://localhost:5173" {
-		return true
-	}
+	// if origin == "" {
+	// 	return true
+	// }
+	// if origin == "http://127.0.0.1:5173" {
+	// 	return true
+	// } else if origin == "http://localhost:5173" {
+	// 	return true
+	// }
 
 	log.Println()
-	log.Printf("origin don't be allowed: %v\n", origin)
+	log.Printf("origin be allowed: %v\n", origin)
+	// log.Printf("origin don't be allowed: %v\n", origin)
 	log.Println()
 
 	// // 解析 Origin 的 URL
@@ -41,7 +42,8 @@ func MyAllowOriginFunc(origin string) bool {
 	// 如果需要验证域名，可以在此添加逻辑
 	// if host == "example.com" { ... }
 
-	return false
+	// return false
+	return true
 }
 
 func SetMiddlewares(r *gin.Engine) {

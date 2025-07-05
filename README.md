@@ -20,6 +20,7 @@
 - HTML5/CSS3
 - JavaScript (ES6+)
 - Fetch API
+- Vue.js (Vite)
 
 ### 后端
 - Go (Gin框架)
@@ -59,10 +60,15 @@ go build -o restaurant_app
 2. 前端部署：
 ```bash
 cd frontend
-http-server -p 3000
+# http-server --cors -p 5173
+npm run dev
 ```
 
 ## 开发说明
 - 前端开发：修改frontend目录下文件
 - 后端开发：修改controller和config目录下文件
 - 样式修改：编辑frontend/style.css
+
+
+## Docker部署
+docker compose up --build

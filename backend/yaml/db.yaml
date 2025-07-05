@@ -1,7 +1,7 @@
-host: localhost
+host: mysql_app  # docker里的service名
 port: 3306
-user: root
-password: root1234
+user: user
+password: password
 name: testdb
 MaxIdleConns: 10
 MaxOpenConns: 100

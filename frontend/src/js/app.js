@@ -3,6 +3,8 @@ import { fetchMenuData, submitOrder, getHotDishes } from './apiService.js';
 import { renderCategories, renderMenuItems } from './menuView.js';
 import { CartService, renderCartItems } from './cartService.js';
 import { ErrorHandler } from './errorHandler.js';
+import { loginUser } from './loginService.js';
+import { setupLoginModal } from './loginView.js';
 
 class RestaurantApp {
     constructor() {
@@ -10,6 +12,7 @@ class RestaurantApp {
         this.hotDishes = null; // 缓存热销菜品
         this.cartService = new CartService();
         this.initElements();
+        this.loginModal = setupLoginModal((username, password) => this.handleLogin(username, password));
     }
 
     initElements() {
@@ -57,7 +60,23 @@ class RestaurantApp {
         }
     }
 
+    async handleLogin(username, password) {
+        try {
+            const result = await loginUser(username, password);
+            this.loginModal.hide();
+            ErrorHandler.showSuccess('登录成功');
+            return result;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     setupEventListeners() {
+        // 登录按钮事件
+        document.getElementById('login-btn').addEventListener('click', () => {
+            this.loginModal.show();
+        });
+
         // 分类点击事件
         this.elements.menuItemsContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('add-to-cart')) {
